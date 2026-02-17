@@ -1,11 +1,13 @@
 import os
 from openai import AsyncOpenAI
 from dotenv import load_dotenv
-from agents import Agent, Runner, OpenAIChatCompletionsModel
+from agents import Agent, Runner, OpenAIChatCompletionsModel, set_tracing_disabled
 import asyncio
 
 class FirstAgent:
     def __init__(self, model, ep, key):
+        set_tracing_disabled(disabled=True)
+
         ai_client = AsyncOpenAI(base_url=ep, api_key=key)
         ai_model = OpenAIChatCompletionsModel(model=model, openai_client=ai_client)
         self.spanish_agent = Agent(name="Spanish Translator Agent", instructions="You are a translator who can translate from English to Spanish. Be concise.", model=ai_model)
