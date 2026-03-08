@@ -6,10 +6,22 @@ from dotenv import load_dotenv
 from localtracer import LocalTracingProcessor
 
 class HandoffLocalAgent:
+    """
+    This class defines a local agent that can hand off user requests to either a Poet Agent or a Short 
+    Story Agent based on the content of the request. It uses the OpenAI API for processing the requests 
+    and generating responses. The agent is designed to run locally, and it includes tracing capabilities 
+    for debugging and analysis purposes.
+    """
     def __init__(self, model, ep, key):
         set_trace_processors([LocalTracingProcessor()])
 
-        # Poet Agent
+        """
+        Poet Agent
+         - This agent is responsible for generating poems based on user prompts. It uses the OpenAI API to
+         generate responses and is designed to handle requests that are specifically for poems. The agent 
+         includes instructions to guide its poetic creation process and is set up to be handed off to by 
+         the Handoff Agent when a user request is identified as a request for a poem.
+        """
         the_poet = AsyncOpenAI(base_url=ep, api_key=key)
         the_poet_model = OpenAIChatCompletionsModel(model=model, openai_client=the_poet)
         poet_agent = Agent(
@@ -19,7 +31,14 @@ class HandoffLocalAgent:
             model=the_poet_model
         )
 
-        # Story Teller Agent
+        """
+        Short Story Agent
+         - This agent is responsible for crafting engaging short stories based on user prompts. It uses the
+              OpenAI API to generate responses and is designed to handle requests that are specifically for 
+              short stories. The agent includes instructions to guide its storytelling process and is set up 
+              to be handed off to by the Handoff Agent when a user request is identified as a request for a 
+              short story.
+        """
         the_storyteller = AsyncOpenAI(base_url=ep, api_key=key)
         the_storyteller_model = OpenAIChatCompletionsModel(model=model, openai_client=the_storyteller)
         the_storyteller_agent = Agent(
@@ -29,7 +48,18 @@ class HandoffLocalAgent:
             model=the_storyteller_model
         )
 
-        # Handoff Client
+        """
+        Handoff Agent
+         - This agent is responsible for receiving user requests and determining which of the two agents 
+           (Poet Agent or Short Story Agent) should handle the request based on its content. It uses the 
+           same OpenAI model for processing the requests and generating responses, and it includes 
+           instructions to guide its decision-making process.
+         - The handoff agent is designed to analyze the user's request and route it to the appropriate agent 
+           based on whether the request is for a poem or a short story. If the request does not fit either 
+           category, it should respond appropriately.
+         - The handoff agent also includes tracing capabilities to allow for debugging and analysis of how 
+           requests are being processed and routed.
+        """
         handoff_client = AsyncOpenAI(base_url=ep, api_key=key)
         handoff_model = OpenAIChatCompletionsModel(model=model, openai_client=handoff_client)
         self.handoff_agent = Agent(
@@ -40,6 +70,10 @@ class HandoffLocalAgent:
         )
 
     async def handle_request(self, text: str) -> str:
+        """
+        This method takes a user request as input, constructs a prompt for the handoff agent, and runs the 
+        agent to get a response. The response is then printed and returned.
+        """
         prompt = f"User Request: {text}"
         # Run the handoff agent with the constructed prompt
         response = await Runner.run(self.handoff_agent, prompt)
@@ -50,7 +84,7 @@ class HandoffLocalAgent:
 if __name__ == "__main__":
     load_dotenv()
 
-    OLLAMA_MODEL = "llama3.2:3b"
+    OLLAMA_MODEL = "llama3.1:8b"
     OLLAMA_EP = "http://localhost:11434/v1"
     OLLAMA_KEY = os.getenv('OLLAMA_API_KEY')
 

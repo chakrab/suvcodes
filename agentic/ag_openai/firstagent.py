@@ -5,6 +5,11 @@ from agents import Agent, Runner, OpenAIChatCompletionsModel, set_tracing_disabl
 import asyncio
 
 class FirstAgent:
+    """
+    This class defines a simple agent that translates English text to Spanish using an OpenAI model. The 
+    agent is initialized with the model name, endpoint, and API key. The translate method constructs a 
+    prompt and runs the agent to get the Spanish translation of the input English text.
+    """
     def __init__(self, model, ep, key):
         set_tracing_disabled(disabled=True)
 
@@ -13,6 +18,10 @@ class FirstAgent:
         self.spanish_agent = Agent(name="Spanish Translator Agent", instructions="You are a translator who can translate from English to Spanish. Be concise.", model=ai_model)
 
     async def translate(self, text: str) -> str:
+        """
+        Agent to translate English text to Spanish. It constructs a prompt with the input text and runs the 
+        agent to get the translation. The final output is printed and returned.
+        """
         prompt = f"Translate the following English text to Spanish:\n\n{text}"
         # Run the agent with the constructed prompt
         response = await Runner.run(self.spanish_agent, prompt)

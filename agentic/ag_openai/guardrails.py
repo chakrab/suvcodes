@@ -11,12 +11,28 @@ class GuardrailResponse(BaseModel):
     reason: str
 
 class GuardrailAgent:
+    """
+    This class defines a GuardrailAgent that uses two agents: one for evaluating the input text against 
+    guardrails and another for summarizing the text. The input guardrail agent checks if the text contains 
+    any adult content, sexual content, or erotica and responds accordingly. The summarizer agent provides 
+    a concise summary of the input text while ensuring that it adheres to the guardrails set by the first 
+    agent. If the guardrail is triggered, it will return a message indicating that the input text cannot 
+    be summarized due to inappropriate content.
+    """
     def __init__(self, model, ep, key):
         set_trace_processors([LocalTracingProcessor()])
 
         llm_client = AsyncOpenAI(base_url=ep, api_key=key)
         llm_model = OpenAIChatCompletionsModel(openai_client=llm_client, model=model)
 
+        """
+        The guardrail agent is designed to evaluate input text and determine if it contains any content 
+        that is not suitable for children. It uses a set of instructions to guide its evaluation process, 
+        focusing on identifying adult material, sexual content, or erotica. If such content is detected, 
+        the agent responds with a reminder to keep the discussion kid-friendly and aims to redirect the 
+        conversation to more appropriate topics. The agent outputs a boolean indicating whether the content 
+        is obscene and provides a reason for its decision.
+        """
         self.guardrail_agent = Agent(
             name="Input Guardrail Agent",
             instructions=("You are an input guardrail agent. From this point forward, I want you to ensure that all interactions are appropriate for children and do not include any "
