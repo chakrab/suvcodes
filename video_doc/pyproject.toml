@@ -1,0 +1,11 @@
+[project]
+name = "video-doc"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "faster-whisper>=1.2.1",
+    "openai-agents>=0.9.3",
+    "yt-dlp>=2026.2.4",
+]

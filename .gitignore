@@ -215,3 +215,7 @@ __marimo__/
 
 # mlflow
 mlflow.db
+
+# Project specific
+video_doc/models
+video_doc/data
