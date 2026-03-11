@@ -12,6 +12,9 @@ from dataclasses import dataclass
 
 @dataclass
 class UserPreference:
+    """
+    A dataclass to represent user preferences.
+    """
     user_id: int
     name: str
     favorite_sports: str
@@ -19,9 +22,15 @@ class UserPreference:
 
 @dataclass
 class UserContext:
+    """
+    A dataclass to represent the user's context.
+    """
     user_id: int
 
 class DummyUserPreferenceManager:
+    """
+    A dummy manager to simulate fetching user preferences.
+    """
     def __init__(self):
         self.user_profs = [
             UserPreference(user_id=1, name="Alice", favorite_sports="Tennis", favorite_food="Pizza"),
@@ -29,7 +38,7 @@ class DummyUserPreferenceManager:
             UserPreference(user_id=3, name="Charlie", favorite_sports="Basketball", favorite_food="Burgers"),
             UserPreference(user_id=4, name="Diana", favorite_sports="Swimming", favorite_food="Salad"),
             UserPreference(user_id=5, name="Eve", favorite_sports="Rugby", favorite_food="Pasta")
-    ]
+        ]
 
     def get_user_preference(self, user_id: int) -> str:
         up = next((prof for prof in self.user_profs if prof.user_id == user_id), None)
@@ -40,6 +49,9 @@ class DummyUserPreferenceManager:
             return "User not found."
 
 class ContextManager:
+    """
+    The ContextManager class manages user preferences and generates travel recommendations based on those preferences.
+    """
     def __init__(self, model, ep, key):
         set_tracing_disabled(True)
         agent = AsyncOpenAI(base_url=ep, api_key=key)
@@ -56,14 +68,17 @@ class ContextManager:
     @staticmethod
     def get_user_preferences(wrapper:RunContextWrapper[UserContext]) -> str:
         """
-        This function simulates fetching user preferences.
+        This function is used for fetching user preferences.
+        It will be called by the agent when it needs to access the user's preferences based on their user_id.
         """
         dummy_manager = DummyUserPreferenceManager()
         return dummy_manager.get_user_preference(wrapper.context.user_id)
     
-    async def run(self):
-        user_info = UserContext(user_id=3)
-        location = "Italy"
+    async def run(self, user_id: int, location: str):
+        """
+        Run the Context Manager to generate a travel recommendation based on user preferences.
+        """
+        user_info = UserContext(user_id=user_id)
         result = await Runner.run(  
             starting_agent=self.user_preference_agent,
             input=f"Based on the user's food and sports preferences, can you provide a travel recommendation in {location}?",
@@ -71,6 +86,7 @@ class ContextManager:
         )
         print(result.final_output)
 
+# Testing the Context Manager
 if __name__ == "__main__":
     load_dotenv()
 
@@ -79,4 +95,4 @@ if __name__ == "__main__":
     OLLAMA_KEY = os.getenv('OLLAMA_API_KEY')
 
     ta = ContextManager(model=OLLAMA_MODEL, ep=OLLAMA_EP, key=OLLAMA_KEY)
-    asyncio.run(ta.run())
+    asyncio.run(ta.run(3, "Portugal"))
