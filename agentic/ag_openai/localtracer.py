@@ -2,8 +2,6 @@ import json
 import datetime
 
 from agents import TracingProcessor
-from agents.tracing.traces import TraceImpl
-from agents.tracing.spans import SpanImpl
 from agents.tracing import AgentSpanData, FunctionSpanData, GenerationSpanData, ResponseSpanData, HandoffSpanData, CustomSpanData, GuardrailSpanData, \
     TranscriptionSpanData, SpeechSpanData, SpeechGroupSpanData, MCPListToolsSpanData
 
@@ -40,6 +38,8 @@ class LocalTracingProcessor(TracingProcessor):
             payload["name"] = getattr(sd, "name", None)
         elif isinstance(sd, GenerationSpanData):
             payload["model"] = getattr(sd, "model", None)
+            payload["input"] = getattr(sd, "input", None)
+            payload["output"] = getattr(sd, "output", None)
         elif isinstance(sd, ResponseSpanData):
             payload["response"] = getattr(sd, "Response", None)
         elif isinstance(sd, HandoffSpanData):
@@ -102,7 +102,7 @@ class LocalTracingProcessor(TracingProcessor):
             self.active_traces[tid] = tdict
         tdict["ended_at"] = datetime.datetime.now(datetime.timezone.utc).isoformat()
         # serialize JSON flow for this trace
-        print(json.dumps(tdict, default=str), flush=True)
+        print(json.dumps(tdict, indent=2, sort_keys=False, default=str), flush=True)
         # cleanup
         del self.active_traces[tid]
 
@@ -160,7 +160,7 @@ class LocalTracingProcessor(TracingProcessor):
     def shutdown(self):
         # Optionally flush remaining traces as JSON
         for tid, tdict in list(self.active_traces.items()):
-            print(json.dumps(tdict, default=str), flush=True)
+            print(json.dumps(tdict, indent=2, sort_keys=False, default=str), flush=True)
             del self.active_traces[tid]
         self.active_spans.clear()
 
