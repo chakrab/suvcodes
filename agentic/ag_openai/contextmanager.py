@@ -27,6 +27,12 @@ class UserContext:
     """
     user_id: int
 
+"""
+A dummy user preference manager is created to simulate fetching user preferences. In a real-world application, 
+this would likely involve database queries or API calls to retrieve user data. The ContextManager class is
+responsible for managing user preferences and generating travel recommendations based on those preferences. 
+It uses an agent to fetch user preferences and generate recommendations accordingly.
+"""
 class DummyUserPreferenceManager:
     """
     A dummy manager to simulate fetching user preferences.
@@ -48,6 +54,10 @@ class DummyUserPreferenceManager:
         else:
             return "User not found."
 
+"""
+The ContextManager class is responsible for managing user preferences and generating travel 
+recommendations based on those preferences.
+"""
 class ContextManager:
     """
     The ContextManager class manages user preferences and generates travel recommendations based on those preferences.

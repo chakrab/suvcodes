@@ -6,7 +6,7 @@ import asyncio
 
 class ChatHistoryAgent:
     def __init__(self, model, ep, key):
-        self.seessions = {}
+        self.sessions = {}
         self.joe_questions = [
             "What is the capital of France?",
             "What are some historical monuments to see there?",
@@ -33,9 +33,9 @@ class ChatHistoryAgent:
         Creates a new session for maintaining chat history. The session is stored in a SQLite database with 
         the given session name.
         """
-        if session_name not in self.seessions:
-            self.seessions[session_name] = SQLiteSession(session_id=session_name)
-        return self.seessions[session_name]
+        if session_name not in self.sessions:
+            self.sessions[session_name] = SQLiteSession(session_id=session_name)
+        return self.sessions[session_name]
         
     async def ask_question(self, session_name: str, question: str) -> str:
         """

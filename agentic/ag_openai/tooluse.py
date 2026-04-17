@@ -70,7 +70,7 @@ class ToolUsage:
         response = await Runner.run(self.zodiac_agent, prompt)
         print(f"Agent Response: {response.final_output}")
         return response
-    
+
 if __name__ == "__main__":
     load_dotenv()
 
@@ -79,5 +79,5 @@ if __name__ == "__main__":
     OLLAMA_KEY = os.getenv('OLLAMA_API_KEY')
 
     ta = ToolUsage(model=OLLAMA_MODEL, ep=OLLAMA_EP, key=OLLAMA_KEY)
-    year = 2004
+    year = 1975
     asyncio.run(ta.run_agent(year))
