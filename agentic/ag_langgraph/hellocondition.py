@@ -7,6 +7,12 @@ class HelloState(TypedDict):
     defect_subcategory: str
     message: str
 
+"""
+This code defines a HelloCondition class that implements a state graph for validating warranty claims based 
+on the number of months owned, defect category, and defect subcategory. The graph checks if the device is 
+still under warranty and routes to appropriate nodes based on the validation results. The final output indicates
+whether the warranty is valid or not.
+"""
 class HelloCondition:
     def months_owned_check(self, state: HelloState) -> HelloState:
         state['message'] = "ERROR" if state["months_owned"] > 12 else "OK"

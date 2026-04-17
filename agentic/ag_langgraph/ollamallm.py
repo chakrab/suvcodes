@@ -1,6 +1,12 @@
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_ollama.llms import OllamaLLM
 
+"""
+This module defines a wrapper class for the OllamaLLM, which is a language model that can be used to
+generate responses to prompts. The wrapper class provides a method to generate responses based on a 
+given prompt, using a predefined chat prompt template. The main function demonstrates how to use the 
+wrapper class to generate a response to a specific question.
+"""
 class OllamaLLMWrapper():
     def __init__(self):
         self.ollama_llm = OllamaLLM(model="command-r7b:7b")

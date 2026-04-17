@@ -4,6 +4,11 @@ from langgraph.graph import StateGraph, START, END
 class HelloState(TypedDict):
     message: str
 
+"""
+A simple example of a state graph that takes a message as input and returns a greeting. The graph 
+consists of a single node that modifies the input message to create a greeting. The graph is invoked
+with an initial state containing the message "World", and it returns "Hello, World!" as the output.
+"""
 class HelloBase:
     def create_graph(self):
         graph = StateGraph(HelloState)
