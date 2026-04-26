@@ -79,7 +79,7 @@ class GuardrailAgent:
 if __name__ == "__main__":
     load_dotenv()
 
-    OLLAMA_MODEL = "llama3.2:3b"
+    OLLAMA_MODEL = "llama3.1:8b"
     OLLAMA_EP = "http://localhost:11434/v1"
     OLLAMA_KEY = os.getenv('OLLAMA_API_KEY')
 
