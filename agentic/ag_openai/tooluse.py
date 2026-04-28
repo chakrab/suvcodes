@@ -79,5 +79,5 @@ if __name__ == "__main__":
     OLLAMA_KEY = os.getenv('OLLAMA_API_KEY')
 
     ta = ToolUsage(model=OLLAMA_MODEL, ep=OLLAMA_EP, key=OLLAMA_KEY)
-    year = 1975
+    year = 1985
     asyncio.run(ta.run_agent(year))
