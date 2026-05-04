@@ -1,0 +1,20 @@
+[project]
+name = "ag-crewai"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = []
+
+[tool.uv.workspace]
+members = [
+    "lib/crewai",
+    "lib/crewai-tools",
+    "lib/devtools",
+    "lib/crewai-files",
+]
+ 
+[tool.uv.sources]
+crewai-tools = { workspace = true }
+crewai-devtools = { workspace = true }
+crewai-files = { workspace = true }
