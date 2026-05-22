@@ -1,0 +1,407 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Trace Viewer (Upload JSON)</title>
+  <style>
+    body { 
+      font-family: Arial, sans-serif; 
+      margin: 20px; 
+      background-image: url('assets/zGR9G.jpg');
+      background-repeat: no-repeat;
+      background-attachment: fixed;
+      background-position: center;
+    }
+    table { 
+      border-collapse: collapse; 
+      width: 100%; 
+      margin-bottom: 16px; 
+    }
+    th, td { 
+      border: 1px solid #ccc; 
+      padding: 8px; 
+      vertical-align: top; 
+    }
+    th { 
+      background: #d3d3d3; 
+      text-align: left; 
+      width: 200px; 
+    }
+    pre { 
+      white-space: pre-wrap; 
+      margin: 0; 
+      font-family: monospace; 
+    }
+    .span-table { 
+      margin-top: 8px; 
+    }
+    .controls { 
+      margin-bottom: 12px; 
+    }
+    .hierarchy-diagram { 
+      margin: 16px 0; 
+      padding: 16px; 
+      background: #d3d3d3; 
+      border: 1px solid #ddd; 
+      border-radius: 4px; 
+    }
+    .tree { 
+      font-family: monospace; 
+      font-size: 13px; 
+      line-height: 1.6;
+    }
+    .tree-node { 
+      margin-left: 20px; 
+    }
+    .tree-node-item { 
+      padding: 4px 8px; 
+      background: #d3d3d3; 
+      border-left: 3px solid #0066cc; 
+      margin: 4px 0; 
+      border-radius: 2px; 
+      cursor: pointer; 
+      transition: background 0.2s; 
+    }
+    .tree-node-item:hover { 
+      background: #d3d3d3; 
+    }
+    .tree-node-link { 
+      color: #0066cc; 
+      text-decoration: none; 
+      cursor: pointer; 
+    }
+    .tree-node-link:hover { 
+      text-decoration: underline; 
+    }
+    .tree-line { 
+      display: inline-block; 
+      margin-right: 8px; 
+      color: #999; 
+    }
+    .back-to-diagram { 
+      margin-top: 8px; 
+    }
+    .back-link { 
+      color: #0066cc; 
+      text-decoration: none; 
+      cursor: pointer; 
+      font-size: 12px; 
+    }
+    .back-link:hover { 
+      text-decoration: underline; 
+    }
+  </style>
+</head>
+<body>
+  <h1>Trace Viewer — Upload JSON</h1>
+
+  <div class="controls">
+    <input id="fileInput" type="file" accept="application/json" />
+    <button id="pasteBtn">Paste JSON</button>
+    <input id="urlInput" type="text" placeholder="Or enter URL to JSON" style="width:40%" />
+    <button id="loadUrlBtn">Load URL</button>
+  </div>
+
+  <div id="app"></div>
+
+  <script>
+    // Utility to create element with text
+    function el(tag, text, attrs = {}) {
+      const e = document.createElement(tag);
+      if (text !== undefined && text !== null) e.textContent = text;
+      Object.keys(attrs).forEach(k => e.setAttribute(k, attrs[k]));
+      return e;
+    }
+
+    function showError(msg) {
+      const app = document.getElementById('app');
+      app.innerHTML = '';
+      const err = document.createElement('div');
+      err.style.color = 'red';
+      err.textContent = msg;
+      app.appendChild(err);
+    }
+
+    // Render top-level trace info
+    function renderTrace(root, obj) {
+      root.innerHTML = '';
+      const table = document.createElement('table');
+      const tbody = document.createElement('tbody');
+
+      const rows = [
+        ['trace_id', obj.trace_id],
+        ['name', obj.name],
+        ['workflow_name', obj.workflow_name],
+        ['started_at', obj.started_at],
+        ['ended_at', obj.ended_at],
+        ['attributes', obj.attributes ? obj.attributes : {}]
+      ];
+
+      rows.forEach(([k,v]) => {
+        const tr = document.createElement('tr');
+        tr.appendChild(el('th', k));
+        const td = document.createElement('td');
+        if (k === 'attributes') {
+          td.appendChild(renderObjectAsTable(v));
+        } else {
+          td.textContent = v === null || v === undefined ? 'null' : String(v);
+        }
+        tr.appendChild(td);
+        tbody.appendChild(tr);
+      });
+
+      table.appendChild(tbody);
+      root.appendChild(table);
+
+      // Spans header
+      root.appendChild(el('h2', 'Spans'));
+      renderSpans(root, obj.spans || []);
+    }
+
+    // Build a tree structure from spans based on parent_id relationships
+    function buildTypeTree(spans) {
+      const spanMap = new Map();
+      const rootNodes = [];
+
+      // Create a map of all spans
+      spans.forEach(span => {
+        spanMap.set(span.span_id, {
+          span_id: span.span_id,
+          type: span.type,
+          name: span.name,
+          parent_id: span.parent_id,
+          children: []
+        });
+      });
+
+      // Build parent-child relationships
+      spanMap.forEach((node, span_id) => {
+        if (node.parent_id === null || node.parent_id === undefined) {
+          rootNodes.push(node);
+        } else if (spanMap.has(node.parent_id)) {
+          spanMap.get(node.parent_id).children.push(node);
+        }
+      });
+
+      return rootNodes;
+    }
+
+    // Recursively render tree nodes
+    function renderTreeNodes(nodes, depth = 0) {
+      const container = document.createElement('div');
+      nodes.forEach((node, idx) => {
+        const nodeDiv = document.createElement('div');
+        nodeDiv.className = 'tree-node-item';
+        nodeDiv.style.marginLeft = (depth * 20) + 'px';
+        
+        const prefix = depth === 0 ? '' : '└─ ';
+        let label = `${prefix}[${node.type}] ${node.span_id}`;
+        if (node.name !== null && node.name !== undefined) {
+          label += ` - ${node.name}`;
+        }
+        
+        // Create clickable link
+        const link = document.createElement('a');
+        link.className = 'tree-node-link';
+        link.href = `#span-${node.span_id}`;
+        link.textContent = label;
+        link.onclick = (e) => {
+          e.preventDefault();
+          const spanElement = document.getElementById(`span-${node.span_id}`);
+          if (spanElement) {
+            spanElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          }
+        };
+        
+        nodeDiv.appendChild(link);
+        container.appendChild(nodeDiv);
+
+        // Render children
+        if (node.children && node.children.length > 0) {
+          container.appendChild(renderTreeNodes(node.children, depth + 1));
+        }
+      });
+      return container;
+    }
+
+    // Render type hierarchy diagram
+    function renderTypeHierarchyDiagram(root, spans) {
+      const diagram = document.createElement('div');
+      diagram.className = 'hierarchy-diagram';
+      diagram.id = 'type-hierarchy';
+
+      if (spans.length === 0) {
+        diagram.textContent = 'No spans to display.';
+        root.appendChild(diagram);
+        return;
+      }
+
+      const treeNodes = buildTypeTree(spans);
+      const treeContainer = document.createElement('div');
+      treeContainer.className = 'tree';
+      treeContainer.appendChild(renderTreeNodes(treeNodes));
+
+      diagram.appendChild(treeContainer);
+      root.appendChild(diagram);
+    }
+
+    // Render spans in a table, maintaining nested payloads.
+    function renderSpans(root, spans) {
+      if (!Array.isArray(spans) || spans.length === 0) {
+        root.appendChild(el('div', 'No spans found.'));
+        return;
+      }
+
+      // Add type hierarchy diagram
+      root.appendChild(el('h2', 'Type Hierarchy'));
+      renderTypeHierarchyDiagram(root, spans);
+
+      spans.forEach((s, idx) => {
+        const container = document.createElement('div');
+        container.className = 'span';
+        container.id = `span-${s.span_id}`;
+
+        // Add back to diagram link
+        const backLink = document.createElement('div');
+        backLink.className = 'back-to-diagram';
+        const link = document.createElement('a');
+        link.className = 'back-link';
+        link.href = '#type-hierarchy';
+        link.textContent = '← Back to Type Hierarchy';
+        link.onclick = (e) => {
+          e.preventDefault();
+          document.getElementById('type-hierarchy').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        };
+        backLink.appendChild(link);
+        container.appendChild(backLink);
+
+        container.appendChild(el('h3', `Span ${idx + 1}: ${s.span_id || '(no id)'} (${s.type || 'unknown'})`));
+
+        const t = document.createElement('table');
+        t.className = 'span-table';
+        const tb = document.createElement('tbody');
+
+        const basic = [
+          ['span_id', s.span_id],
+          ['parent_id', s.parent_id],
+          ['name', s.name],
+          ['type', s.type],
+          ['started_at', s.started_at],
+          ['ended_at', s.ended_at]
+        ];
+        basic.forEach(([k,v]) => {
+          const tr = document.createElement('tr');
+          tr.appendChild(el('th', k));
+          tr.appendChild(el('td', v === null || v === undefined ? 'null' : String(v)));
+          tb.appendChild(tr);
+        });
+
+        // Payload
+        const trPayload = document.createElement('tr');
+        trPayload.appendChild(el('th', 'payload'));
+        const tdPayload = document.createElement('td');
+        tdPayload.appendChild(renderObjectAsTable(s.payload || {}));
+        trPayload.appendChild(tdPayload);
+        tb.appendChild(trPayload);
+
+        // Attributes
+        const trAttr = document.createElement('tr');
+        trAttr.appendChild(el('th', 'attributes'));
+        const tdAttr = document.createElement('td');
+        tdAttr.appendChild(renderObjectAsTable(s.attributes || {}));
+        trAttr.appendChild(tdAttr);
+        tb.appendChild(trAttr);
+
+        t.appendChild(tb);
+        container.appendChild(t);
+        root.appendChild(container);
+      });
+    }
+
+    // Render arbitrary object as nested table or value
+    function renderObjectAsTable(obj) {
+      if (obj === null) return el('div', 'null');
+      if (typeof obj !== 'object') return el('div', String(obj));
+
+      if (Array.isArray(obj)) {
+        const wrapper = document.createElement('div');
+        const table = document.createElement('table');
+        const thead = document.createElement('thead');
+        const htr = document.createElement('tr');
+        htr.appendChild(el('th', 'index'));
+        htr.appendChild(el('th', 'value'));
+        thead.appendChild(htr);
+        table.appendChild(thead);
+        const tb = document.createElement('tbody');
+        obj.forEach((item, i) => {
+          const tr = document.createElement('tr');
+          tr.appendChild(el('td', String(i)));
+          const td = document.createElement('td');
+          if (item && typeof item === 'object') td.appendChild(renderObjectAsTable(item));
+          else td.appendChild(el('div', String(item)));
+          tr.appendChild(td);
+          tb.appendChild(tr);
+        });
+        table.appendChild(tb);
+        wrapper.appendChild(table);
+        return wrapper;
+      }
+
+      const table = document.createElement('table');
+      const tb = document.createElement('tbody');
+      Object.keys(obj).forEach(key => {
+        const tr = document.createElement('tr');
+        tr.appendChild(el('th', key));
+        const val = obj[key];
+        const td = document.createElement('td');
+        if (val === null) td.textContent = 'null';
+        else if (typeof val === 'object') td.appendChild(renderObjectAsTable(val));
+        else td.textContent = String(val);
+        tr.appendChild(td);
+        tb.appendChild(tr);
+      });
+      table.appendChild(tb);
+      return table;
+    }
+
+    // File input handler
+    document.getElementById('fileInput').addEventListener('change', async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      try {
+        const text = await file.text();
+        const json = JSON.parse(text);
+        renderTrace(document.getElementById('app'), json);
+      } catch (err) {
+        showError('Invalid JSON file: ' + err.message);
+      }
+    });
+
+    // Paste JSON button (opens prompt)
+    document.getElementById('pasteBtn').addEventListener('click', () => {
+      const raw = prompt('Paste JSON object here:');
+      if (!raw) return;
+      try {
+        const json = JSON.parse(raw);
+        renderTrace(document.getElementById('app'), json);
+      } catch (err) {
+        showError('Invalid JSON: ' + err.message);
+      }
+    });
+
+    // Load URL button (fetch JSON from remote URL)
+    document.getElementById('loadUrlBtn').addEventListener('click', async () => {
+      const url = document.getElementById('urlInput').value.trim();
+      if (!url) return showError('Enter a URL.');
+      try {
+        const res = await fetch(url);
+        if (!res.ok) throw new Error('Network error: ' + res.status);
+        const json = await res.json();
+        renderTrace(document.getElementById('app'), json);
+      } catch (err) {
+        showError('Failed to load JSON from URL: ' + err.message);
+      }
+    });
+  </script>
+</body>
+</html>

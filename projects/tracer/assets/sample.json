@@ -1,0 +1,172 @@
+{
+  "trace_id": "trace_f7d737aff43f4cc0a9f03d3ffdc34bc1",
+  "name": "Agent workflow",
+  "workflow_name": null,
+  "started_at": "2026-05-14T00:19:11.130650+00:00",
+  "ended_at": "2026-05-14T00:20:05.457036+00:00",
+  "attributes": {},
+  "spans": [
+    {
+      "span_id": "span_780ab7a206ac4d728ab8de08",
+      "parent_id": "span_8039bdbc12ab4052ba04e622",
+      "name": null,
+      "type": "GenerationSpanData",
+      "started_at": "2026-05-14T00:19:11.133716+00:00",
+      "ended_at": "2026-05-14T00:19:52.814084+00:00",
+      "payload": {
+        "model": "llama3.1:8b",
+        "input": [
+          {
+            "content": "You are an agent that hands off user requests to either the Poet Agent or the Short Story Agent based on the content of the request. If the user requests a poem, hand off to the Poet Agent. If the user requests a short story, hand off to the Short Story Agent. If the request is neither, respond appropriately.",
+            "role": "system"
+          },
+          {
+            "role": "user",
+            "content": "User Request: Can you write me a haiku about nature?"
+          }
+        ],
+        "output": [
+          {
+            "content": "",
+            "refusal": null,
+            "role": "assistant",
+            "annotations": null,
+            "audio": null,
+            "function_call": null,
+            "tool_calls": [
+              {
+                "id": "call_jhu6kj7q",
+                "function": {
+                  "arguments": "{\"input_text\":\"Can you write me a haiku about nature?\"}",
+                  "name": "transfer_to_poet_agent"
+                },
+                "type": "function",
+                "index": 0
+              }
+            ]
+          }
+        ]
+      },
+      "attributes": {}
+    },
+    {
+      "span_id": "span_ff61063fc0ae46f1981afc51",
+      "parent_id": "span_8039bdbc12ab4052ba04e622",
+      "name": null,
+      "type": "HandoffSpanData",
+      "started_at": "2026-05-14T00:19:52.816908+00:00",
+      "ended_at": "2026-05-14T00:19:52.817224+00:00",
+      "payload": {
+        "from_agent": "Handoff Agent",
+        "to_agent": "Poet Agent"
+      },
+      "attributes": {}
+    },
+    {
+      "span_id": "span_8039bdbc12ab4052ba04e622",
+      "parent_id": "span_5af0917e945346ce8e11e86c",
+      "name": null,
+      "type": "TurnSpanData",
+      "started_at": "2026-05-14T00:19:11.132955+00:00",
+      "ended_at": "2026-05-14T00:19:52.817470+00:00",
+      "payload": {},
+      "attributes": {}
+    },
+    {
+      "span_id": "span_5af0917e945346ce8e11e86c",
+      "parent_id": "span_727b0ed4015f4b0b8d5981b6",
+      "name": "Handoff Agent",
+      "type": "AgentSpanData",
+      "started_at": "2026-05-14T00:19:11.132901+00:00",
+      "ended_at": "2026-05-14T00:19:52.817590+00:00",
+      "payload": {
+        "name": "Handoff Agent"
+      },
+      "attributes": {}
+    },
+    {
+      "span_id": "span_dc75f3f20a59486a89a7f0cf",
+      "parent_id": "span_b64854553f47418489ddc238",
+      "name": null,
+      "type": "GenerationSpanData",
+      "started_at": "2026-05-14T00:19:52.820047+00:00",
+      "ended_at": "2026-05-14T00:20:05.451395+00:00",
+      "payload": {
+        "model": "llama3.1:8b",
+        "input": [
+          {
+            "content": "You are a creative poet who writes beautiful poems based on user prompts.",
+            "role": "system"
+          },
+          {
+            "role": "user",
+            "content": "User Request: Can you write me a haiku about nature?"
+          },
+          {
+            "role": "assistant",
+            "content": null,
+            "tool_calls": [
+              {
+                "id": "call_jhu6kj7q",
+                "type": "function",
+                "function": {
+                  "name": "transfer_to_poet_agent",
+                  "arguments": "{\"input_text\":\"Can you write me a haiku about nature?\"}"
+                }
+              }
+            ]
+          },
+          {
+            "role": "tool",
+            "tool_call_id": "call_jhu6kj7q",
+            "content": "{\"assistant\": \"Poet Agent\"}"
+          }
+        ],
+        "output": [
+          {
+            "content": "Snowflakes gently fall\nDancing on the winter breeze\nNature's peaceful hush",
+            "refusal": null,
+            "role": "assistant",
+            "annotations": null,
+            "audio": null,
+            "function_call": null,
+            "tool_calls": null
+          }
+        ]
+      },
+      "attributes": {}
+    },
+    {
+      "span_id": "span_b64854553f47418489ddc238",
+      "parent_id": "span_e4e5d0e7d7914cc8b68fd156",
+      "name": null,
+      "type": "TurnSpanData",
+      "started_at": "2026-05-14T00:19:52.818531+00:00",
+      "ended_at": "2026-05-14T00:20:05.454860+00:00",
+      "payload": {},
+      "attributes": {}
+    },
+    {
+      "span_id": "span_e4e5d0e7d7914cc8b68fd156",
+      "parent_id": "span_727b0ed4015f4b0b8d5981b6",
+      "name": "Poet Agent",
+      "type": "AgentSpanData",
+      "started_at": "2026-05-14T00:19:52.818480+00:00",
+      "ended_at": "2026-05-14T00:20:05.456807+00:00",
+      "payload": {
+        "name": "Poet Agent"
+      },
+      "attributes": {}
+    },
+    {
+      "span_id": "span_727b0ed4015f4b0b8d5981b6",
+      "parent_id": null,
+      "name": null,
+      "type": "TaskSpanData",
+      "started_at": "2026-05-14T00:19:11.131726+00:00",
+      "ended_at": "2026-05-14T00:20:05.456881+00:00",
+      "payload": {},
+      "attributes": {}
+    }
+  ]
+}
