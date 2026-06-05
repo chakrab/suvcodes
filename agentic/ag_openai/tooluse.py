@@ -3,6 +3,7 @@ from agents import Agent, Runner, OpenAIChatCompletionsModel, set_tracing_disabl
 from dotenv import load_dotenv
 import os
 import asyncio
+from localtracer import LocalTracingProcessor
 
 class ToolUsage:
     """
@@ -16,7 +17,9 @@ class ToolUsage:
     Zodiac sign, as the Chinese do not use a solar calendar, but instead uses a lunar calendar. 
     """
     def __init__(self, model, ep, key):
-        set_tracing_disabled(True)
+        #set_tracing_disabled(True)
+        set_trace_processors([LocalTracingProcessor()])
+        
         agent = AsyncOpenAI(base_url=ep, api_key=key)
         agent_model = OpenAIChatCompletionsModel(model=model, openai_client=agent)
 

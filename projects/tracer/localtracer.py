@@ -2,8 +2,9 @@ import json
 import datetime
 
 from agents import TracingProcessor
-from agents.tracing import AgentSpanData, FunctionSpanData, GenerationSpanData, ResponseSpanData, HandoffSpanData, CustomSpanData, GuardrailSpanData, \
-    TranscriptionSpanData, SpeechSpanData, SpeechGroupSpanData, MCPListToolsSpanData
+from agents.tracing import (AgentSpanData, FunctionSpanData, GenerationSpanData, ResponseSpanData, HandoffSpanData, 
+        CustomSpanData, GuardrailSpanData, TurnSpanData,
+        TranscriptionSpanData, SpeechSpanData, SpeechGroupSpanData, MCPListToolsSpanData)
 
 class LocalTracingProcessor(TracingProcessor):
     """
@@ -17,6 +18,9 @@ class LocalTracingProcessor(TracingProcessor):
         self.active_spans = {}
 
     def _make_trace_dict(self, trace):
+        """
+        Create a dict for a trace with basic info. Spans will be attached later.
+        """
         return {
             "trace_id": getattr(trace, "trace_id", None),
             "name": getattr(trace, "name", None),
@@ -26,8 +30,19 @@ class LocalTracingProcessor(TracingProcessor):
             "attributes": getattr(trace, "attributes", {}) or {},
             "spans": []
         }
+    
+    def _get_truncated_str(self, s, max_len=100):
+        """
+        Utility to truncate long strings for better readability in JSON output.
+        """
+        if isinstance(s, str) and len(s) > max_len:
+            return s[:max_len] + "...(truncated)"
+        return s
 
     def _span_type_and_payload(self, span):
+        """
+        Determine span type and extract relevant payload based on known span data types.
+        """
         sd = span.span_data
         payload = {}
         span_type = type(sd).__name__ if sd is not None else "Unknown"
@@ -35,6 +50,8 @@ class LocalTracingProcessor(TracingProcessor):
         if isinstance(sd, AgentSpanData):
             payload["name"] = getattr(sd, "name", None)
         elif isinstance(sd, FunctionSpanData):
+            payload["name"] = getattr(sd, "name", None)
+        elif isinstance(sd, TurnSpanData):
             payload["name"] = getattr(sd, "name", None)
         elif isinstance(sd, GenerationSpanData):
             payload["model"] = getattr(sd, "model", None)
@@ -67,6 +84,9 @@ class LocalTracingProcessor(TracingProcessor):
         return span_type, payload
 
     def _get_span_trace_id(self, span):
+        """
+        Attempt to find the trace id for a span by checking common attributes and nested objects.
+        """
         # Try common locations for trace id/pointer
         for attr in ("trace_id", "trace", "parent_trace_id", "traceId"):
             val = getattr(span, attr, None)
@@ -87,6 +107,9 @@ class LocalTracingProcessor(TracingProcessor):
         return None
 
     def _get_span_parent_id(self, span):
+        """
+        Attempt to find the parent span id for a span by checking common attributes and nested objects.
+        """
         # Try common locations for parent span id
         for attr in ("parent_span_id", "parent_id", "parentSpanId", "parentSpan", "parent", "parentId"):
             val = getattr(span, attr, None)
@@ -105,6 +128,9 @@ class LocalTracingProcessor(TracingProcessor):
         return None
 
     def on_trace_start(self, trace):
+        """
+        Create a trace dict and store it keyed by trace_id. Spans will be attached as they end.
+        """
         tid = getattr(trace, "trace_id", None)
         if tid is None:
             # generate key if missing
@@ -112,6 +138,9 @@ class LocalTracingProcessor(TracingProcessor):
         self.active_traces[tid] = self._make_trace_dict(trace)
 
     def on_trace_end(self, trace):
+        """
+        Finalize the trace dict, serialize to JSON, and cleanup. Spans should have been attached by now.
+        """
         tid = getattr(trace, "trace_id", None) or id(trace)
         tdict = self.active_traces.get(tid)
         if tdict is None:
@@ -125,11 +154,17 @@ class LocalTracingProcessor(TracingProcessor):
         del self.active_traces[tid]
 
     def on_span_start(self, span):
+        """
+        Store a span until it ends.
+        """
         # store raw span until it ends
         sid = getattr(span, "span_id", None) or id(span)
         self.active_spans[sid] = span
 
     def on_span_end(self, span):
+        """
+        Build a span dict, attach to its trace, and cleanup stored span.
+        """
         sid = getattr(span, "span_id", None) or id(span)
         raw = self.active_spans.get(sid)
         if raw is None:
@@ -178,6 +213,9 @@ class LocalTracingProcessor(TracingProcessor):
         del self.active_spans[sid]
 
     def shutdown(self):
+        """
+        Flush any remaining traces and spans.
+        """
         # Optionally flush remaining traces as JSON
         for tid, tdict in list(self.active_traces.items()):
             print(json.dumps(tdict, indent=2, sort_keys=False, default=str), flush=True)
@@ -185,5 +223,8 @@ class LocalTracingProcessor(TracingProcessor):
         self.active_spans.clear()
 
     def force_flush(self):
+        """
+        Force flush any remaining traces and spans.
+        """
         # No-op for now; could be used to persist to disk
         pass

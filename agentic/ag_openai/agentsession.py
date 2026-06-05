@@ -101,11 +101,11 @@ class SessionAgent:
         user_csv = ','.join(users)
         while True:
             user = input(f"\n\nUSER ({user_csv})>>> ")
-            if user.lower() not in users:
+            if user.lower() == 'bye':
+                break
+            elif user.lower() not in users:
                 print(f"Invalid user. Please choose from: {user_csv}")
                 continue
-            elif user.lower() == 'bye':
-                break
 
             question = input(f"\nQUESTION ({user})>>> ")
             if question.lower() != 'bye':

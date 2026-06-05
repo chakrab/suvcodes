@@ -86,6 +86,24 @@ class LocalTracingProcessor(TracingProcessor):
                     return val
         return None
 
+    def _get_span_parent_id(self, span):
+        # Try common locations for parent span id
+        for attr in ("parent_span_id", "parent_id", "parentSpanId", "parentSpan", "parent", "parentId"):
+            val = getattr(span, attr, None)
+            if val:
+                if hasattr(val, "span_id"):
+                    return getattr(val, "span_id")
+                return val
+        sd = getattr(span, "span_data", None)
+        if sd:
+            for attr in ("parent_span_id", "parent_id", "parentSpanId", "parentSpan", "parent", "parentId"):
+                val = getattr(sd, attr, None)
+                if val:
+                    if hasattr(val, "span_id"):
+                        return getattr(val, "span_id")
+                    return val
+        return None
+
     def on_trace_start(self, trace):
         tid = getattr(trace, "trace_id", None)
         if tid is None:
@@ -118,8 +136,10 @@ class LocalTracingProcessor(TracingProcessor):
             return
         # build span dict
         span_type, payload = self._span_type_and_payload(raw)
+        parent_id = self._get_span_parent_id(raw)
         span_dict = {
             "span_id": getattr(raw, "span_id", None),
+            "parent_id": parent_id,
             "name": payload.get("name", getattr(raw, "name", None)),
             "type": span_type,
             "started_at": getattr(raw, "started_at", None),
