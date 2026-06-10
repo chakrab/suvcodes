@@ -5,8 +5,16 @@ from fastmcp.resources import resource
 from searchfeature import SearchFeature
 
 class SearchMCP():
+    """
+    This is a basic MCP service that can be used for searching web.
+    It will reun on port 8081 (hardcoded).
 
+    It does not use annotations (decorators) to define the tools,
+        but uses registering direct through API.
+    """
     def __init__(self) -> None:
+        """
+        """
         self.port = 8081
         self.name = "Web Search MCP"
         self.mcp = FastMCP(self.name)
@@ -20,6 +28,9 @@ class SearchMCP():
         self.logger = logging.getLogger(self.name)
 
     def start(self):
+        """
+        Add the resources/ tools and start the MCP server
+        """
         self.logger.info(f"Starting MCP on {self.port}")
         self.mcp.add_tool(self.search_web)
         self.mcp.add_resource(self.get_version)
@@ -38,8 +49,8 @@ class SearchMCP():
         """
         Searches web and returns results using DuckDuckGo
         Params:
-            :query - Search Text
-            :max_results - Max number of results to return
+            query:          Search Text
+            max_results:    Max number of results to return
         """
         sf = SearchFeature()
         results = sf.search(query=query, maxresults=max_results) 

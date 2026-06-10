@@ -1,11 +1,11 @@
-from fastmcp import Client, FastMCP
+from fastmcp import Client
 import asyncio
 
 class MCPClient(Client):
-    def __init__(self):
-        pass
-
-    async def test_resource(self):
+    async def test_mcp_service(self):
+        """
+        Tester for the MCP service. Creates a client and runs the methods.
+        """
         client = Client("http://localhost:8081/mcp")
         async with client:
             print(f"Connected: {client.is_connected()}")
@@ -17,4 +17,4 @@ class MCPClient(Client):
 
 if __name__ == "__main__":
     mcp = MCPClient()
-    asyncio.run(mcp.test_resource())
+    asyncio.run(mcp.test_mcp_service())

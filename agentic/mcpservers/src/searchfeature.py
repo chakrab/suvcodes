@@ -1,10 +1,16 @@
 from ddgs import DDGS
 
 class SearchFeature:
-    def __init__(self):
-        pass
-
+    """
+    This is used for calling DDGS for searching web and getting search results
+    """
     def search(self, query, maxresults):
+        """
+        Main function to search.
+        Param:
+            query:      Query
+            maxresults: Max results to return
+        """
         with DDGS() as ddgs:
             result = ddgs.text(query=query, max_results=maxresults)
         return result
