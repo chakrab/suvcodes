@@ -1,5 +1,6 @@
 {
     "files.watcherExclude": {
         "**/target": true
-    }
+    },
+    "ollama-autopilot.model.modelName": "jgmolinawork/gpt5.2-lite"
 }

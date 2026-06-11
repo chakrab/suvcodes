@@ -1,5 +1,5 @@
 from openai import AsyncOpenAI
-from agents import Agent, Runner, OpenAIChatCompletionsModel, set_tracing_disabled, set_trace_processors, function_tool
+from agents import Agent, Runner, OpenAIChatCompletionsModel, set_trace_processors, function_tool
 from dotenv import load_dotenv
 import os
 import asyncio
